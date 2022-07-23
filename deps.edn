@@ -1,0 +1,9 @@
+{:deps  {geoprim/geoprim {:local/root
+                          "../geoprim"}
+         geoprim/quickthing {:local/root
+                           "../quickthing"}
+         factual/geo     {:mvn/version
+                          "3.0.1"}
+         thi.ng/geom     {:mvn/version
+                          "1.0.0-RC4"}}
+ :paths ["."]}
