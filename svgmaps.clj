@@ -60,20 +60,20 @@
      ;; used to properly scale the POI dot
      (apply
        svg/group
-     attribs
-     (map (fn
-            [point]
-            (let [[eas
-                   sou] (geoprim/point-to-eassou
-                          region
-                          point)]
-              (svg/circle
-                [eas
-                 sou]
-                (/
-                  longer-axis-length
-                  100))))
-          points)))))
+       attribs
+       (map (fn
+              [point]
+              (let [[eas
+                     sou] (geoprim/point-to-eassou
+                            region
+                            point)]
+                (svg/circle
+                  [eas
+                   sou]
+                  (/
+                    longer-axis-length
+                    100))))
+            points)))))
 
 #_
 (defn
@@ -197,78 +197,156 @@
                        scale-factor)]
      (->
        {:x-axis (viz/linear-axis
-                  {:domain      [x-start
-                                 x-end]
-                   :range       [0
-                                 width]
-                   :visible     true
-                   :major       tick-spacing
-                   :major-size  (*
-                                  -2.0
-                                  tick-size)
-                   :label       (viz/default-svg-label 
-                                  (axis-degree-formatter
-                                    tick-spacing))
-                   :label-style {:fill        "black"
-                                 :stroke      "none"
-                                 :font-family "Arial, sans-serif"
-                                 :font-size   tick-size
-                                 :text-anchor "start"
-                                 :transform   (str
-                                                "translate("
-                                                (/
-                                                  tick-size
-                                                  4.0)
-                                                " "
-                                                (-
-                                                  (/ tick-size
-                                                     2.0))
-                                                ")")}
-                   :label-dist  0.0
-                   :pos         height
-                   :attribs     {:stroke-width (/
-                                                 tick-size
-                                                 10.0)}})
+                  (let [offset-x (/
+                                   tick-size
+                                   4.0)
+                        offset-y (-
+                                   (/ tick-size
+                                      2.0))]
+                    {:domain      [x-start
+                                   x-end]
+                     :range       [0
+                                   width]
+                     :visible     true
+                     :major       tick-spacing
+                     :major-size  (*
+                                    -2.0
+                                    tick-size)
+                     ;; The label is a bit complex b/c it needs to find the final position..
+                     ;; detemine if it's out of bounds - and then not draw the label
+                     :label       (fn [[x y] text]
+                                    (let [final-x (+
+                                                    x
+                                                    offset-x)
+                                          final-y (+
+                                                    y
+                                                    offset-y)]
+                                      (if (or
+                                            (>
+                                              final-x
+                                              width)
+                                            (<
+                                              final-x
+                                              0.0)
+                                            (>
+                                              final-y
+                                              height)
+                                            (<
+                                              final-y
+                                              0.0))
+                                        (svg/text ;; text is out of bounds
+                                          [0
+                                           0]
+                                          "")
+                                        (svg/text
+                                          [(/ x ;;position scaled do to `scale`d `text` elements
+                                              tick-size)
+                                           (/ y
+                                              tick-size)]
+                                          ((axis-degree-formatter
+                                             tick-size)
+                                           text)
+                                          {:transform (str
+                                                        "scale("
+                                                        tick-size
+                                                        ")")}))))
+                     #_           (viz/default-svg-label
+                                    (axis-degree-formatter
+                                      tick-spacing))
+                     :label-style {:fill        "black"
+                                   :stroke      "none"
+                                   :font-family "Arial, sans-serif"
+                                   :font-size   "3pt" ;;tick-size
+                                   :text-anchor "start"
+                                   :transform   (str
+                                                  "translate("
+                                                  offset-x
+                                                  " "
+                                                  offset-y
+                                                  ")")}
+                     :label-dist  0.0
+                     :pos         height
+                     :attribs     {:stroke-width (/
+                                                   tick-size
+                                                   10.0)}}))
         #_#_
         :grid   {:major   true
                  :attribs {:stroke-width     0.01
                            :stroke-dasharray "0.01 0.01"}}
         :y-axis (viz/linear-axis
-                  {:domain      [y-end
-                                 y-start]
-                   :range       [height
-                                 0]
-                   :visible     true
-                   :major       tick-spacing
-                   :major-size  (*
-                                      -2.0
-                                      tick-size)
-                   :label       (viz/default-svg-label 
-                                   (axis-degree-formatter
-                                     tick-spacing))
-                   :label-style {:fill        "black"
-                                 :stroke      "none"
-                                 :font-family "Arial, sans-serif"
-                                 :font-size   tick-size
-                                 :text-anchor "start"
-                                 :transform   (str
-                                                "translate("
-                                                (/
-                                                  tick-size
-                                                  2.0)
-                                                " "
-                                                (/
-                                                  tick-size
-                                                  8.0)
-                                                ")")}
-                   :label-dist  (/
-                                  tick-size
-                                  10.0)
-                   :label-y     tick-size
-                   :pos         0.0
-                   :attribs     {:stroke-width (/
-                                                 tick-size
-                                                 10.0)}})
+                  (let [offset-x (/
+                                   1 ;;tick-size
+                                   40.0)
+                        offset-y (/
+                                   1 ;;tick-size
+                                   8.0)]
+                    {:domain      [y-end
+                                   y-start]
+                     :range       [height
+                                   0]
+                     :visible     true
+                     :major       tick-spacing
+                     :major-size  (*
+                                    -2.0
+                                    tick-size)
+                     ;; The label is a bit complex b/c it needs to find the final position..
+                     ;; detemine if it's out of bounds - and then not draw the label
+                     :label       (fn [[x y] text]
+                                    (let [final-x (+
+                                                    x
+                                                    offset-x)
+                                          final-y (+
+                                                    y
+                                                    offset-y)]
+                                      (if (or
+                                            (>
+                                              final-x
+                                              width)
+                                            (<
+                                              final-x
+                                              0.0)
+                                            (>
+                                              final-y
+                                              height)
+                                            (<
+                                              final-y
+                                              0.0))
+                                        (svg/group nil nil) ;; text is out of bounds
+                                        (svg/text
+                                          [(/ x
+                                              tick-size)
+                                           (/ y
+                                              tick-size)]
+                                          ((axis-degree-formatter
+                                             tick-size)
+                                           text)
+                                          {;;:fill     "purple"
+                                           :transform (str
+                                                        "scale("
+                                                        tick-size
+                                                        ")")}))))
+                     #_           (viz/default-svg-label
+                                    (axis-degree-formatter
+                                      tick-spacing))
+                     :label-style {:fill        "black"
+                                   :stroke      "none"
+                                   :font-family "Arial, sans-serif"
+                                   :font-size   "3pt"
+                                   :text-anchor "start"
+                                   :transform   (str
+                                                  "translate("
+                                                  offset-x
+                                                  " "
+                                                  offset-y
+                                                  ")")}
+                     :label-dist  (/
+                                    tick-size
+                                    10.0)
+                     :label-y     tick-size
+                     :pos         0.0
+                     :attribs     {:stroke-width (/
+                                                   tick-size
+                                                   10.0)}}))
         :data   [{:values  [[0.1
                              0.1]]
                   :attribs {:fill   "none"
